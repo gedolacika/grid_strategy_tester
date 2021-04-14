@@ -4,13 +4,13 @@ const GridSignalProvider = require('./grid_signal_provider')
 const GridTransactionProvider = require('./grid_transaction_provider')
 
 const gridSettings = {
-  min: 55000,
-  max: 61000,
+  min: 0.03370,
+  max: 0.04955,
   numberOfGrids: 8
 }
 
 const grid_backtester = async () => {
-  const cryptoExchangeRateChanges = await cryptoReaderFromFile('exchange_rates/2021_apr_12_13_1min_usdt_btc.csv')
+  const cryptoExchangeRateChanges = await cryptoReaderFromFile('exchange_rates/waves_bnb/2021_feb_22_apr_14_1min.csv')
   const balanceProvider = new BalanceProvider();
   const gridSignalProvider = new GridSignalProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);
   const gridTransationProvider = new GridTransactionProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);

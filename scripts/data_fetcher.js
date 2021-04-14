@@ -2,6 +2,7 @@ const ccxt = require('ccxt')
 const fs = require('fs')
 
 const fetchCandles = async (fromTimestamp = 1611455122174, toTimestamp = 1611875122174, currency = 'BTC/EUR', timeIntervals = '5m', fileName = 'fetchedData.csv') => {
+    console.log(currency)
     var ccxtInstance = new ccxt.binance()
     var candles = []
     var currentTimestamp = fromTimestamp
@@ -29,4 +30,4 @@ const fetchCandles = async (fromTimestamp = 1611455122174, toTimestamp = 1611875
     fs.writeFile(fileName, data, (err, data) => { })
   }
 
-fetchCandles(1618113600000, 1618200000000, 'BTC/USDT', '1m', '2021_apr_12_13_1min_usdt_btc.csv')
+fetchCandles(1613952000000, 1618387101737, 'WAVES/BNB', '1m', '2021_feb_22_apr_14_1min_waves_bnb.csv')

@@ -4,13 +4,13 @@ const GridSignalProvider = require('./grid_signal_provider')
 const GridTransactionProvider = require('./grid_transaction_provider')
 
 const gridSettings = {
-  min: 0.03370,
-  max: 0.04955,
-  numberOfGrids: 8
+  min: 59000,
+  max: 61000,
+  numberOfGrids: 12
 }
 
 const grid_backtester = async () => {
-  const cryptoExchangeRateChanges = await cryptoReaderFromFile('exchange_rates/waves_bnb/2021_feb_22_apr_14_1min.csv')
+  const cryptoExchangeRateChanges = await cryptoReaderFromFile('exchange_rates/usdt_btc/2021_apr_11_12_1min_usdt_btc.csv')
   const balanceProvider = new BalanceProvider();
   const gridSignalProvider = new GridSignalProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);
   const gridTransationProvider = new GridTransactionProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);
@@ -32,11 +32,11 @@ const grid_backtester = async () => {
       if(!gridTransationProvider.isTransactionExists(gridSignalProvider.getCrossedGrid(element))) {
         const transactionType = open < close ? 'buy' : 'sell';
         if(transactionType == 'buy') {
-          balanceProvider.changeUsdtToBtc(crossedGrid * 0.002, crossedGrid);
+          balanceProvider.changeBaseToExchange(crossedGrid * 0.002, crossedGrid);
           balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toString()) + ' - ' + open.toString() + ' - BUY')
         }
         if(transactionType == 'sell') {
-          balanceProvider.changeBtcToUsdt(0.002, crossedGrid);
+          balanceProvider.changeExchangeToBase(0.002, crossedGrid);
           balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toString()) + ' - ' + open.toString() + ' - SELL')
         }
         gridTransationProvider.createTransaction(0.002, crossedGrid, transactionType)
@@ -44,7 +44,7 @@ const grid_backtester = async () => {
 
       // check that on the lower level is exists an active transaction to fulfill it
       if(gridTransationProvider.isTypedTransactionExists(previousGrid, 'buy')) {
-        balanceProvider.changeBtcToUsdt(0.002, crossedGrid)
+        balanceProvider.changeExchangeToBase(0.002, crossedGrid)
         gridTransationProvider.fulfillTransaction(crossedGrid)
         balanceProvider.printBalance('FULFILL, BUY')
         ++counter;
@@ -52,7 +52,7 @@ const grid_backtester = async () => {
 
       // check that on the higher level is exists an active transaction to fulfill it
       if(gridTransationProvider.isTypedTransactionExists(nextGrid, 'sell')) {
-        balanceProvider.changeUsdtToBtc(crossedGrid * 0.002, crossedGrid)
+        balanceProvider.changeBaseToExchange(crossedGrid * 0.002, crossedGrid)
         gridTransationProvider.fulfillTransaction(crossedGrid)
         balanceProvider.printBalance('FULFILL, SELL')
         ++counter;

@@ -2,37 +2,46 @@
 
 class BalanceProvider {
 
-    constructor() {
-        this.usdt = 3016.0
-        this.btc = 0.05
-        this.changeFee = 0.001
+    #currencyPrecisions = {
+        USDT: 2,
+        BTC: 6,
+        WAVES: 4,
+        BNB: 5
     }
 
-    changeUsdtToBtc(usdtToChange, changeRate) {
-        if (this.usdt >= usdtToChange) {
-            var usdtAfterFee = usdtToChange * (1 - this.changeFee);
-            var btcValue = usdtAfterFee / changeRate;
+    constructor(initialBaseValue = 3016.0, initialExchangeValue = 0.05, baseCurrency = 'USDT', exchangeCurrency = 'BTC') {
+        this.baseCurrency = initialBaseValue
+        this.exchange = initialExchangeValue
+        this.changeFee = 0.001
+        this.basePrecision = this.#currencyPrecisions[baseCurrency] == null ? 2 : this.#currencyPrecisions[baseCurrency]
+        this.exchangePrecision = this.#currencyPrecisions[exchangeCurrency] == null ? 2 : this.#currencyPrecisions[exchangeCurrency]
+    }
 
-            this.usdt = parseFloat((this.usdt - usdtToChange).toFixed(2));
-            this.btc = parseFloat((this.btc + btcValue).toFixed(6));
+    changeBaseToExchange(baseToChange, changeRate) {
+        if (this.baseCurrency >= baseToChange) {
+            var baseAfterFee = baseToChange * (1 - this.changeFee);
+            var exchangeValue = baseAfterFee / changeRate;
+
+            this.baseCurrency = parseFloat((this.baseCurrency - baseToChange).toFixed(2));
+            this.exchange = parseFloat((this.exchange + exchangeValue).toFixed(6));
         }
     }
 
-    changeBtcToUsdt(btcToChange, changeRate) {
-        if (this.btc >= btcToChange) {
-            var btcAfterFee = btcToChange * (1 - this.changeFee);
-            var usdtValue = btcAfterFee * changeRate;
+    changeExchangeToBase(exchangeToChange, changeRate) {
+        if (this.exchange >= exchangeToChange) {
+            var exchangeAfterFee = exchangeToChange * (1 - this.changeFee);
+            var baseValue = exchangeAfterFee * changeRate;
 
-            this.usdt = parseFloat((this.usdt + usdtValue).toFixed(2));
-            this.btc = parseFloat((this.btc - btcToChange).toFixed(6));
+            this.baseCurrency = parseFloat((this.baseCurrency + baseValue).toFixed(2));
+            this.exchange = parseFloat((this.exchange - exchangeToChange).toFixed(6));
         }
     }
 
     printBalance(additionalMessage = '') {
         if(additionalMessage == '') {
-            console.log('USDT: ' + this.usdt.toString() + '; BTC: ' + this.btc.toString())
+            console.log('BASE: ' + this.baseCurrency.toString() + '; EXCHANGE: ' + this.exchange.toString())
         } else {
-            console.log(additionalMessage + '; USDT: ' + this.usdt.toString() + '; BTC: ' + this.btc.toString())
+            console.log(additionalMessage + '; BASE: ' + this.baseCurrency.toString() + '; EXCHANGE: ' + this.exchange.toString())
         }
     }
 

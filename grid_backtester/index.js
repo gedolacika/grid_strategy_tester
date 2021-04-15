@@ -4,9 +4,9 @@ const GridSignalProvider = require('./grid_signal_provider')
 const GridTransactionProvider = require('./grid_transaction_provider')
 
 const gridSettings = {
-  min: 59000,
+  min: 57000,
   max: 61000,
-  numberOfGrids: 12
+  numberOfGrids: 6
 }
 
 const grid_backtester = async () => {
@@ -31,22 +31,27 @@ const grid_backtester = async () => {
       // if not have to create one
       if(!gridTransationProvider.isTransactionExists(gridSignalProvider.getCrossedGrid(element))) {
         const transactionType = open < close ? 'buy' : 'sell';
+        var isSuccessedTransaction = false
+        console.log('------ CREATE  ORDER -----')
         if(transactionType == 'buy') {
-          balanceProvider.changeBaseToExchange(crossedGrid * 0.002, crossedGrid);
-          balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toString()) + ' - ' + open.toString() + ' - BUY')
+          isSuccessedTransaction = balanceProvider.changeBaseToExchange(crossedGrid * 0.002, crossedGrid);
         }
         if(transactionType == 'sell') {
-          balanceProvider.changeExchangeToBase(0.002, crossedGrid);
-          balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toString()) + ' - ' + open.toString() + ' - SELL')
+          isSuccessedTransaction = balanceProvider.changeExchangeToBase(0.002, crossedGrid);
         }
-        gridTransationProvider.createTransaction(0.002, crossedGrid, transactionType)
+        if(isSuccessedTransaction) {
+          balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toString()) + ' - ' + open.toString() + ' - ' + transactionType.toUpperCase() + ' - crossed grid:' + crossedGrid)
+          gridTransationProvider.createTransaction(0.002, crossedGrid, transactionType)
+        }
+        console.log('------ END CREATION OF ORDER -----')
+        console.log('')
       }
 
       // check that on the lower level is exists an active transaction to fulfill it
       if(gridTransationProvider.isTypedTransactionExists(previousGrid, 'buy')) {
         balanceProvider.changeExchangeToBase(0.002, crossedGrid)
         gridTransationProvider.fulfillTransaction(crossedGrid)
-        balanceProvider.printBalance('FULFILL, BUY')
+        balanceProvider.printBalance('FULFILL, BUY - onGrid: ' + crossedGrid + ', prevGrid: ' + previousGrid + ' -')
         ++counter;
       }
 
@@ -54,7 +59,7 @@ const grid_backtester = async () => {
       if(gridTransationProvider.isTypedTransactionExists(nextGrid, 'sell')) {
         balanceProvider.changeBaseToExchange(crossedGrid * 0.002, crossedGrid)
         gridTransationProvider.fulfillTransaction(crossedGrid)
-        balanceProvider.printBalance('FULFILL, SELL')
+        balanceProvider.printBalance('FULFILL, SELL - onGrid: ' + crossedGrid + ', nextGrid: ' + nextGrid + ' -')
         ++counter;
       }
     }

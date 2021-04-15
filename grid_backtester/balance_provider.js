@@ -20,11 +20,11 @@ class BalanceProvider {
 
     changeBaseToExchange(baseToChange, changeRate) {
         var isTransactionSuccessed = false
-        if (this.baseCurrency >= baseToChange) {
-            var baseAfterFee = baseToChange * (1 - this.changeFee);
-            var exchangeValue = baseAfterFee / changeRate;
+        if (this.baseCurrency >= (baseToChange * (1 + this.changeFee))) {
+            var baseAfterFee = baseToChange * (1 + this.changeFee);
+            var exchangeValue = baseToChange / changeRate;
 
-            this.baseCurrency = parseFloat((this.baseCurrency - baseToChange).toFixed(2));
+            this.baseCurrency = parseFloat((this.baseCurrency - baseAfterFee).toFixed(2));
             this.exchange = parseFloat((this.exchange + exchangeValue).toFixed(6));
             isTransactionSuccessed = true;
         }

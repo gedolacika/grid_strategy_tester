@@ -45,9 +45,9 @@ class GridSignalProvider {
         return prevGrid < this.minValue ? null : prevGrid;
     }
 
-    getNextCrossedGrid(crossedGrid) {
+    getNextCrossedGrid(crossedGrid, i) {
         var nextGrid = crossedGrid + this.gridHeight
-        return (nextGrid + 1) > this.maxValue ? null : nextGrid;
+        return nextGrid > (this.maxValue + 1) ? null : nextGrid;
     }
 }
 

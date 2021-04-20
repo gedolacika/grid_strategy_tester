@@ -49,6 +49,13 @@ class GridTransactionProvider {
             console.log('Exchange rate: ' + exchangeRate + ', volume: ' + volume + ', transactionType: ' + transactionType);
         }
     }
+
+    printActiveTransactions() {
+        console.log('     --- Active transactions ---')
+        this.activeTransactions.forEach(({ exchangeRate, volume, transactionType, iteration }) => console.log('Exchange rate: ' + exchangeRate + ', volume: ' + volume + ', transactionType: ' + transactionType + ', createdIteration: ' + iteration)
+        )
+        console.log('               -----')
+    }
 }
 
 module.exports = GridTransactionProvider

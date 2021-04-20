@@ -6,18 +6,22 @@ const GridTransactionProvider = require('./grid_transaction_provider')
 const getTypeOfOrder = require('../utils/candle_counter_utils').getTypeOfOrder
 
 const gridSettings = {
-  fromTimestamp: 1614556800000,
+  fromTimestamp: 1609459200000,
   toTimestamp: 1617235140000,
   baseCurrency: 'USDT',
   exchangeCurrency: 'BTC',
-  min: 50000,
+  min: 30000,
   max: 60000,
-  numberOfGrids: 11,
-  initialBaseValue: 1200.0, // (numberOfGrids - 1) * oneTimeChange
-  initialExchangeValue: 0.02 // (numberOfGrids - 1) * oneTimeChange
+  numberOfGrids: 33,
+  initialBaseValue: 3600.0, // (numberOfGrids - 1) * oneTimeChange
+  initialExchangeValue: 0.06, // (numberOfGrids - 1) * oneTimeChange
+  exchangeTradingVolumePerLine: 0.002
 }
 
 const grid_backtester = async () => {
+  const initialExchangeValue = (gridSettings.numberOfGrids - 1) * gridSettings.exchangeTradingVolumePerLine
+  const initialBaseValue = initialExchangeValue * gridSettings.max
+  console.log(initialBaseValue + ' ' + initialExchangeValue)
   const cryptoExchangeRateChanges = await cryptoReaderByDate(
     gridSettings.fromTimestamp,
     gridSettings.toTimestamp,

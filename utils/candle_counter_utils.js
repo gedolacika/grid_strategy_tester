@@ -4,7 +4,6 @@ const getTypeOfOrder = (currentCandle, previousCandle, gridLineValue, gridLines)
     return 'buy'
   }
   if(gridLineValue == getHighestGrid(gridLines)) {
-    console.log('innen ni')
     return 'sell'
   }
   const { open, close, highest, lowest } = currentCandle

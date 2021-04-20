@@ -11,21 +11,22 @@ class GridTransactionProvider {
     }
 
     isTransactionExists(exchangeRate) {
-        return this.activeTransactions.filter(element => element.exchangeRate > exchangeRate - 1 && element.exchangeRate < exchangeRate + 1 ).length == 1;
+        return this.activeTransactions.filter(element => element.exchangeRate == exchangeRate).length == 1;
     }
 
-    isTypedTransactionExists(exchangeRate, transactionType) {
-        return this.activeTransactions.filter(element =>
-            element.exchangeRate > exchangeRate - 1 && element.exchangeRate < exchangeRate + 1  && element.transactionType == transactionType
-        ).length == 1;
+    isTypedTransactionExists(exchangeRate, transactionType, i) {
+        return this.activeTransactions
+            .filter(element => element.exchangeRate == exchangeRate && element.transactionType == transactionType)
+            .length == 1;
     }
 
     // transactionType: buy/sell
-    createTransaction(volume, exchangeRate, transactionType) {
+    createTransaction(volume, exchangeRate, transactionType, iteration) {
         this.activeTransactions.push({
             volume: volume,
             exchangeRate: exchangeRate,
-            transactionType: transactionType
+            transactionType: transactionType,
+            iteration: iteration
         })
     }
 

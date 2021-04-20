@@ -30,4 +30,4 @@ const fetchCandles = async (fromTimestamp = 1611455122174, toTimestamp = 1611875
     fs.writeFile(fileName, data, (err, data) => { })
   }
 
-fetchCandles(1614556800000, 1617235200000, 'BTC/USDT', '1m', '2021_march_1min_usdt_btc.csv')
+fetchCandles(1609459200000, 1612137600000, 'BTC/USDT', '1m', '2021_jan_1min_usdt_btc.csv')

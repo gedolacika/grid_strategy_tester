@@ -1,10 +1,15 @@
 const cryptoReaderFromFile = require('../utils/file').readCrypto
+const cryptoReaderByDate = require('../utils/file').readCryptoByDate
 const BalanceProvider = require('./balance_provider')
 const GridSignalProvider = require('./grid_signal_provider')
 const GridTransactionProvider = require('./grid_transaction_provider')
 const getTypeOfOrder = require('../utils/candle_counter_utils').getTypeOfOrder
 
 const gridSettings = {
+  fromTimestamp: 1614556800000,
+  toTimestamp: 1617235140000,
+  baseCurrency: 'USDT',
+  exchangeCurrency: 'BTC',
   min: 50000,
   max: 60000,
   numberOfGrids: 11,
@@ -13,8 +18,18 @@ const gridSettings = {
 }
 
 const grid_backtester = async () => {
-  const cryptoExchangeRateChanges = await cryptoReaderFromFile('exchange_rates/usdt_btc/2021/2021_march_1min_usdt_btc.csv')
-  const balanceProvider = new BalanceProvider(gridSettings.initialBaseValue, gridSettings.initialExchangeValue);
+  const cryptoExchangeRateChanges = await cryptoReaderByDate(
+    gridSettings.fromTimestamp,
+    gridSettings.toTimestamp,
+    gridSettings.baseCurrency,
+    gridSettings.exchangeCurrency
+  )
+  const balanceProvider = new BalanceProvider(
+    gridSettings.initialBaseValue,
+    gridSettings.initialExchangeValue,
+    gridSettings.baseCurrency,
+    gridSettings.exchangeCurrency
+  );
   const gridSignalProvider = new GridSignalProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);
   const gridTransationProvider = new GridTransactionProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);
 

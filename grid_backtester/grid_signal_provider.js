@@ -8,7 +8,7 @@ class GridSignalProvider {
         this.gridLines = []
         this.gridHeight = parseFloat(((this.maxValue - this.minValue) / (this.numberOfGrids - 1)).toFixed(2));
         this.#createGridLines()
-        this.gridLines.forEach(element => console.log(element))
+        this.gridLines.reverse().forEach(element => console.log(element))
     }
 
     #createGridLines() {
@@ -47,7 +47,7 @@ class GridSignalProvider {
 
     getNextCrossedGrid(crossedGrid) {
         var nextGrid = crossedGrid + this.gridHeight
-        return nextGrid > this.maxValue ? null : nextGrid;
+        return (nextGrid + 1) > this.maxValue ? null : nextGrid;
     }
 }
 

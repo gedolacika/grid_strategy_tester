@@ -2,11 +2,12 @@ const cryptoReaderFromFile = require('../utils/file').readCrypto
 const BalanceProvider = require('./balance_provider')
 const GridSignalProvider = require('./grid_signal_provider')
 const GridTransactionProvider = require('./grid_transaction_provider')
+const getGtypeOfOrder = require('../utils/candle_counter_utils').getTypeOfOrder
 
 const gridSettings = {
-  min: 60500,
-  max: 51000,
-  numberOfGrids: 10,
+  min: 52000,
+  max: 59000,
+  numberOfGrids: 5,
   initialBaseValue: 3016.0,
   initialExchangeValue: 0.05
 }
@@ -20,8 +21,9 @@ const grid_backtester = async () => {
   balanceProvider.printBalance()
   var counter = 0
 
-  for (let i = 0; i < cryptoExchangeRateChanges.length; i++) {
+  for (let i = 1; i < cryptoExchangeRateChanges.length; i++) {
     const element = cryptoExchangeRateChanges[i];
+    const previousElement = cryptoExchangeRateChanges[i - 1];
     const { timestamp, open, highest, lowest, close, volume } = element
 
     if (gridSignalProvider.isCrossedWithGridLine(element)) {
@@ -32,7 +34,7 @@ const grid_backtester = async () => {
       // check that at the current level is exists already a transaction
       // if not have to create one
       if (!gridTransationProvider.isTransactionExists(gridSignalProvider.getCrossedGrid(element))) {
-        const transactionType = open < close ? 'buy' : 'sell';
+        const transactionType = getGtypeOfOrder(element, previousElement, crossedGrid ,gridSignalProvider.gridLines);
         var isSuccessedTransaction = false
         console.log('------ CREATE  ORDER -----')
         if (transactionType == 'buy') {
@@ -42,7 +44,7 @@ const grid_backtester = async () => {
           isSuccessedTransaction = balanceProvider.changeExchangeToBase(0.002, crossedGrid);
         }
         if (isSuccessedTransaction) {
-          balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toString()) + ' - ' + open.toString() + ' - ' + transactionType.toUpperCase() + ' - crossed grid:' + crossedGrid)
+          balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toUTCString()) + ' - ' + open.toString() + ' - ' + transactionType.toUpperCase() + ' - crossed grid:' + crossedGrid)
           gridTransationProvider.createTransaction(0.002, crossedGrid, transactionType)
         }
         console.log('------ END CREATION OF ORDER -----')

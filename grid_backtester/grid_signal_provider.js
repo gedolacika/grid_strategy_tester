@@ -1,14 +1,14 @@
 
 
 class GridSignalProvider {
-    constructor(min = 9000, max = 11000, numberOfGrids = 10) {
+    constructor(min = 9000, max = 11000, numberOfGrids = 10, isLoggingEnabled = false) {
         this.numberOfGrids = numberOfGrids;
         this.minValue = min;
         this.maxValue = max;
         this.gridLines = []
         this.gridHeight = parseFloat(((this.maxValue - this.minValue) / (this.numberOfGrids - 1)).toFixed(2));
         this.#createGridLines()
-        this.gridLines.reverse().forEach(element => console.log(element))
+        isLoggingEnabled && this.gridLines.reverse().forEach(element => console.log(element))
     }
 
     #createGridLines() {

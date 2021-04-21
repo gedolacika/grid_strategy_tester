@@ -6,23 +6,8 @@ const GridTransactionProvider = require('./grid_transaction_provider')
 const getTypeOfOrder = require('../utils/candle_counter_utils').getTypeOfOrder
 const precisionTransformer = require('../utils/currency_precision_transformer').transformer
 
-const gridSettings = {
-  fromTimestamp: 1609459200000,
-  toTimestamp: 1617235140000,
-  baseCurrency: 'USDT',
-  exchangeCurrency: 'BTC',
-  min: 30000,
-  max: 60000,
-  numberOfGrids: 33,
-  exchangeTradingVolumePerLine: 0.01,
-  exchangeFee: 0.001
-}
-
-const transformPrecision = () => {
-
-}
-
-const grid_backtester = async () => {
+const grid_backtester = async (gridSettings) => {
+  const isLoggingEnabled = gridSettings.isLoggingEnabled
   var test_result = {
     settings: gridSettings
   }
@@ -37,7 +22,6 @@ const grid_backtester = async () => {
       exchange: initialExchangeValue
     }
   }
-  console.log(initialBaseValue + ' ' + initialExchangeValue)
   const cryptoExchangeRateChanges = await cryptoReaderByDate(
     gridSettings.fromTimestamp,
     gridSettings.toTimestamp,
@@ -48,10 +32,16 @@ const grid_backtester = async () => {
     initialBaseValue,
     initialExchangeValue,
     gridSettings.baseCurrency,
-    gridSettings.exchangeCurrency
+    gridSettings.exchangeCurrency,
+    isLoggingEnabled
   );
   const gridSignalProvider = new GridSignalProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);
-  const gridTransationProvider = new GridTransactionProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);
+  const gridTransationProvider = new GridTransactionProvider(
+    gridSettings.min,
+    gridSettings.max,
+    gridSettings.numberOfGrids,
+    isLoggingEnabled
+  );
 
   balanceProvider.printBalance()
   var counter = 0
@@ -109,7 +99,7 @@ const grid_backtester = async () => {
           )
           ), gridSettings.baseCurrency) + ' ' + gridSettings.baseCurrency
         }
-        console.log('')
+        isLoggingEnabled && console.log('')
         balanceProvider.changeExchangeToBase(gridSettings.exchangeTradingVolumePerLine, crossedGrid)
         transaction = {
           ...transaction,
@@ -119,9 +109,9 @@ const grid_backtester = async () => {
           }
         }
         gridTransationProvider.fulfillTransaction(previousGrid)
-        balanceProvider.printBalance('FULFILL, BUY - iteration: ' + i + ', time: ' + (new Date(timestamp).toUTCString()) + ', onGrid: ' + crossedGrid + ', prevGrid: ' + previousGrid + ' -')
+        isLoggingEnabled && balanceProvider.printBalance('FULFILL, BUY - iteration: ' + i + ', time: ' + (new Date(timestamp).toUTCString()) + ', onGrid: ' + crossedGrid + ', prevGrid: ' + previousGrid + ' -')
         if(i < 250) { gridTransationProvider.printActiveTransactions() }
-        console.log('')
+        isLoggingEnabled && console.log('')
         transactions.push(transaction)
         ++counter;
       }
@@ -177,8 +167,8 @@ const grid_backtester = async () => {
           }
         }
         gridTransationProvider.fulfillTransaction(nextGrid)
-        balanceProvider.printBalance('FULFILL, SELL - iteration: ' + i + ', time: ' + (new Date(timestamp).toUTCString()) + ', onGrid: ' + crossedGrid + ', nextGrid: ' + nextGrid + ' -')
-        if(i < 250) { gridTransationProvider.printActiveTransactions() }
+        isLoggingEnabled && balanceProvider.printBalance('FULFILL, SELL - iteration: ' + i + ', time: ' + (new Date(timestamp).toUTCString()) + ', onGrid: ' + crossedGrid + ', nextGrid: ' + nextGrid + ' -')
+        if(isLoggingEnabled && i < 250) { gridTransationProvider.printActiveTransactions() }
         transactions.push(transaction)
         ++counter;
       }
@@ -199,7 +189,7 @@ const grid_backtester = async () => {
           crossedGridLine: crossedGrid
         }
         var isSuccessedTransaction = false
-        console.log('------ CREATE  ORDER -----')
+        isLoggingEnabled && console.log('------ CREATE  ORDER -----')
         if (transactionType == 'buy') {
           isSuccessedTransaction = balanceProvider.changeBaseToExchange(crossedGrid * gridSettings.exchangeTradingVolumePerLine, crossedGrid);
         }
@@ -214,13 +204,13 @@ const grid_backtester = async () => {
           }
         }
         if (isSuccessedTransaction) {
-          balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toUTCString()) + ' - ' + open.toString() + ' - ' + transactionType.toUpperCase() + ' - crossed grid:' + crossedGrid)
+          isLoggingEnabled && balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toUTCString()) + ' - ' + open.toString() + ' - ' + transactionType.toUpperCase() + ' - crossed grid:' + crossedGrid)
           gridTransationProvider.createTransaction(gridSettings.exchangeTradingVolumePerLine, crossedGrid, transactionType, i)
           transactions.push(transaction)
         }
-        if(i < 250) { gridTransationProvider.printActiveTransactions() }
-        console.log('------ END CREATION OF ORDER -----')
-        console.log('')
+        if(isLoggingEnabled && i < 250) { gridTransationProvider.printActiveTransactions() }
+        isLoggingEnabled && console.log('------ END CREATION OF ORDER -----')
+        isLoggingEnabled && console.log('')
       }
     }
   }
@@ -275,16 +265,18 @@ const grid_backtester = async () => {
     transactions : transactions
   }
 
-  balanceProvider.printBalance()
-  console.log('Number of fullfills: ' + counter)
-  console.log('Initial balance value: ' + initialBalanceValue)
-  console.log('Finished balance value: ' + endBalanceValue)
-  console.log('The wallet increase rate: ' + ((endBalanceValue * 100 / initialBalanceValue) - 100).toFixed(2) + ' %')
-  console.log('Initial balance: ' + initialBaseValue + ', ' + initialExchangeValue)
-  console.log('Results: ')
-  console.log(test_result)
+  isLoggingEnabled && balanceProvider.printBalance()
+  isLoggingEnabled && console.log('Number of fullfills: ' + counter)
+  isLoggingEnabled && console.log('Initial balance value: ' + initialBalanceValue)
+  isLoggingEnabled && console.log('Finished balance value: ' + endBalanceValue)
+  isLoggingEnabled && console.log('The wallet increase rate: ' + ((endBalanceValue * 100 / initialBalanceValue) - 100).toFixed(2) + ' %')
+  isLoggingEnabled && console.log('Initial balance: ' + initialBaseValue + ', ' + initialExchangeValue)
+  isLoggingEnabled && console.log('Results: ')
+  // console.log(test_result)
 
-  
+  return test_result
 }
 
-grid_backtester()
+module.exports = {
+  grid_backtester: grid_backtester
+}

@@ -17,14 +17,17 @@ app.get('/', async (req, res) => {
     exchangeFee: 0.001,
     isLoggingEnabled: false
   }
+  console.log('Tester starts to run...')
+  const running_starts = (new Date()).valueOf()
   var test_result = await grid_backtester(gridSettings)
+  const running_finished = (new Date()).valueOf()
+  console.log('Tester ran. Running time: ' + (running_finished - running_starts) + ' ms') 
   test_result = {
     ...test_result,
     transactions: 'Result hided'
   }
-  console.log('Script ran.')
-  console.log('Results are: ')
-  console.log(test_result)
+  // console.log('Results: ')
+  // console.log(test_result)
 })
 
 app.listen(port, () => {

@@ -43,7 +43,7 @@ const grid_backtester = async (gridSettings) => {
     isLoggingEnabled
   );
 
-  balanceProvider.printBalance()
+  isLoggingEnabled && balanceProvider.printBalance()
   var counter = 0
   
   var transactions = []

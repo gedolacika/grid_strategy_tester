@@ -13,13 +13,13 @@ const gridSettings = {
   min: 30000,
   max: 60000,
   numberOfGrids: 33,
-  initialBaseValue: 3600.0, // (numberOfGrids - 1) * oneTimeChange
-  initialExchangeValue: 0.06, // (numberOfGrids - 1) * oneTimeChange
-  exchangeTradingVolumePerLine: 0.002
+  exchangeTradingVolumePerLine: 0.01
 }
 
 const grid_backtester = async () => {
+   // (numberOfGrids - 1) * oneTimeChange
   const initialExchangeValue = (gridSettings.numberOfGrids - 1) * gridSettings.exchangeTradingVolumePerLine
+   // (numberOfGrids - 1) * oneTimeChange
   const initialBaseValue = initialExchangeValue * gridSettings.max
   console.log(initialBaseValue + ' ' + initialExchangeValue)
   const cryptoExchangeRateChanges = await cryptoReaderByDate(
@@ -29,8 +29,8 @@ const grid_backtester = async () => {
     gridSettings.exchangeCurrency
   )
   const balanceProvider = new BalanceProvider(
-    gridSettings.initialBaseValue,
-    gridSettings.initialExchangeValue,
+    initialBaseValue,
+    initialExchangeValue,
     gridSettings.baseCurrency,
     gridSettings.exchangeCurrency
   );
@@ -53,7 +53,7 @@ const grid_backtester = async () => {
       // check that on the lower level is exists an active transaction to fulfill it
       if (gridTransationProvider.isTypedTransactionExists(previousGrid, 'buy', i)) {
         console.log('')
-        balanceProvider.changeExchangeToBase(0.002, crossedGrid)
+        balanceProvider.changeExchangeToBase(gridSettings.exchangeTradingVolumePerLine, crossedGrid)
         gridTransationProvider.fulfillTransaction(previousGrid)
         balanceProvider.printBalance('FULFILL, BUY - iteration: ' + i + ', time: ' + (new Date(timestamp).toUTCString()) + ', onGrid: ' + crossedGrid + ', prevGrid: ' + previousGrid + ' -')
         if(i < 250) { gridTransationProvider.printActiveTransactions() }
@@ -63,7 +63,7 @@ const grid_backtester = async () => {
 
       // check that on the higher level is exists an active transaction to fulfill it
       if (gridTransationProvider.isTypedTransactionExists(nextGrid, 'sell', i)) {
-        balanceProvider.changeBaseToExchange(crossedGrid * 0.002, crossedGrid)
+        balanceProvider.changeBaseToExchange(crossedGrid * gridSettings.exchangeTradingVolumePerLine, crossedGrid)
         gridTransationProvider.fulfillTransaction(nextGrid)
         balanceProvider.printBalance('FULFILL, SELL - iteration: ' + i + ', time: ' + (new Date(timestamp).toUTCString()) + ', onGrid: ' + crossedGrid + ', nextGrid: ' + nextGrid + ' -')
         if(i < 250) { gridTransationProvider.printActiveTransactions() }
@@ -77,14 +77,14 @@ const grid_backtester = async () => {
         var isSuccessedTransaction = false
         console.log('------ CREATE  ORDER -----')
         if (transactionType == 'buy') {
-          isSuccessedTransaction = balanceProvider.changeBaseToExchange(crossedGrid * 0.002, crossedGrid);
+          isSuccessedTransaction = balanceProvider.changeBaseToExchange(crossedGrid * gridSettings.exchangeTradingVolumePerLine, crossedGrid);
         }
         if (transactionType == 'sell') {
-          isSuccessedTransaction = balanceProvider.changeExchangeToBase(0.002, crossedGrid);
+          isSuccessedTransaction = balanceProvider.changeExchangeToBase(gridSettings.exchangeTradingVolumePerLine, crossedGrid);
         }
         if (isSuccessedTransaction) {
           balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toUTCString()) + ' - ' + open.toString() + ' - ' + transactionType.toUpperCase() + ' - crossed grid:' + crossedGrid)
-          gridTransationProvider.createTransaction(0.002, crossedGrid, transactionType, i)
+          gridTransationProvider.createTransaction(gridSettings.exchangeTradingVolumePerLine, crossedGrid, transactionType, i)
         }
         if(i < 250) { gridTransationProvider.printActiveTransactions() }
         console.log('------ END CREATION OF ORDER -----')
@@ -97,7 +97,7 @@ const grid_backtester = async () => {
   const countingRate = cryptoExchangeRateChanges[0].close
 
   // the initial wallet value
-  const initialBalanceValue = gridSettings.initialBaseValue + gridSettings.initialExchangeValue * countingRate
+  const initialBalanceValue = initialBaseValue + initialExchangeValue * countingRate
 
   // the wallet value after the gridbot runs
   const endBalanceValue = balanceProvider.baseCurrency + balanceProvider.exchange * countingRate
@@ -106,6 +106,7 @@ const grid_backtester = async () => {
   console.log('Initial balance value: ' + initialBalanceValue)
   console.log('Finished balance value: ' + endBalanceValue)
   console.log('The wallet increase rate: ' + ((endBalanceValue * 100 / initialBalanceValue) - 100).toFixed(2) + ' %')
+  console.log('Initial balance: ' + initialBaseValue + ', ' + initialExchangeValue)
 }
 
 grid_backtester()

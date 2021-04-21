@@ -43,6 +43,20 @@ class GridTransactionProvider {
         }
     }
 
+    getTransactionByExchangeRate(exchangeRate) {
+        var index;
+        for (let i = 0; i < this.activeTransactions.length; i++) {
+            if(this.activeTransactions[i].exchangeRate == exchangeRate) {
+                index = i;
+                break;
+            }
+        }
+        if(index != null) {
+            return this.activeTransactions[index];
+        }
+        return null;
+    }
+
     printTransaction(index) {
         if(index < this.activeTransactions.length) {
             const { volume, exchangeRate, transactionType } = this.activeTransactions[index];

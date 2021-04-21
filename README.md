@@ -13,7 +13,10 @@ why it is better then the basic
 
 ## Endpoints
 
-It contains only one endpoint, the ```bash server_url:3000/```
+It contains only one endpoint
+```bash
+server_url:3000/
+```
 
 ### Parameters
 description for each parameter

@@ -3,8 +3,9 @@ const app = express()
 const port = 3000
 const grid_backtester = require('./grid_backtester/index').grid_backtester
 
-app.get('/', async (req, res) => {
+app.get('/test', async (req, res) => {
   res.send('Hello World!')
+  console.log('Data from params: ' + req.query.fromTimestamp)
   const gridSettings = {
     fromTimestamp: 1609459200000,
     toTimestamp: 1617235140000,

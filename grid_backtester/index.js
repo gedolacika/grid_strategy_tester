@@ -261,8 +261,13 @@ const grid_backtester = async (gridSettings) => {
   }
   test_result = {
     ...test_result,
-    totalProfitRate: precisionTransformer((test_result.totalProfit * 100 / initialBalanceValue), gridSettings.baseCurrency) + ' %',
-    transactions : transactions
+    totalProfitRate: precisionTransformer((test_result.totalProfit * 100 / initialBalanceValue), gridSettings.baseCurrency) + ' %'
+  }
+  if(gridSettings.isTransactionsHaveToBeReturned) {
+    test_result = {
+      ...test_result,
+      transactions : transactions
+    }
   }
 
   isLoggingEnabled && balanceProvider.printBalance()

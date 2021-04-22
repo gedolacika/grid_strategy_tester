@@ -32,6 +32,11 @@ It runs the test and returns the result.
 | exchangeTradingVolumePerLine |    float    |    -    |   true   |      0.01     | the exchange trading volume for each grid line           |
 | exchangeFee                  |    float    |  0.001  |   false  |     0.001     | the fee of the various exchanges; the binance is default |
 
+#### Example for call
+```bash
+curl 'http://localhost:3000/?fromTimestamp=1609459200000&toTimestamp=1617235140000&baseCurrency=USDT&exchangeCurrency=BTC&min=30000&max=60000&numberOfGrids=33&exchangeTradingVolumePerLine=0.01&exchangeFee=0.001'
+```
+
 ### /supportedPairs
 
 The currently supported pairs with intervals

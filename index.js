@@ -3,32 +3,42 @@ const app = express()
 const port = 3000
 const grid_backtester = require('./grid_backtester/index').grid_backtester
 
+const gridSettingsForTesting = {
+  fromTimestamp: 1609459200000,
+  toTimestamp: 1617235140000,
+  baseCurrency: 'USDT',
+  exchangeCurrency: 'BTC',
+  min: 30000,
+  max: 60000,
+  numberOfGrids: 33,
+  exchangeTradingVolumePerLine: 0.01,
+  exchangeFee: 0.001,
+  isLoggingEnabled: false
+}
+
 app.get('/', async (req, res) => {
-  res.send('Hello World!')
-  console.log('Data from params: ' + req.query.fromTimestamp)
-  const gridSettings = {
-    fromTimestamp: 1609459200000,
-    toTimestamp: 1617235140000,
-    baseCurrency: 'USDT',
-    exchangeCurrency: 'BTC',
-    min: 30000,
-    max: 60000,
-    numberOfGrids: 33,
-    exchangeTradingVolumePerLine: 0.01,
-    exchangeFee: 0.001,
+  const gridSettingsFromQuery = {
+    fromTimestamp: parseInt(req.query.fromTimestamp),
+    toTimestamp: parseInt(req.query.toTimestamp),
+    baseCurrency: req.query.baseCurrency,
+    exchangeCurrency: req.query.exchangeCurrency,
+    min: parseInt(req.query.min),
+    max: parseInt(req.query.max),
+    numberOfGrids: parseInt(req.query.numberOfGrids),
+    exchangeTradingVolumePerLine: parseFloat(req.query.exchangeTradingVolumePerLine),
+    exchangeFee: parseFloat(req.query.exchangeFee),
+    isTransactionsHaveToBeReturned: false,
     isLoggingEnabled: false
   }
-  console.log('Tester starts to run...')
   const running_starts = (new Date()).valueOf()
-  var test_result = await grid_backtester(gridSettings)
+  var test_result = await grid_backtester(gridSettingsFromQuery)
   const running_finished = (new Date()).valueOf()
-  console.log('Tester ran. Running time: ' + (running_finished - running_starts) + ' ms') 
+  console.log('Tester ran. Running time: ' + (running_finished - running_starts) + ' ms')
   test_result = {
     ...test_result,
-    transactions: 'Result hided'
+    testerRunTime: running_finished - running_starts
   }
-  // console.log('Results: ')
-  console.log(test_result)
+  res.send(JSON.stringify(test_result))
 })
 
 app.listen(port, () => {

@@ -39,7 +39,6 @@ The currently supported pairs with intervals
 |  Symbol  |       Supported starting time      |        Supported ending time       |
 | -------- |----------------|-------------------|----------------|-------------------|
 |          |  Milliseconds  |      DateTime     |  Milliseconds  |      DateTime     | 
-| -------- |----------------|-------------------|----------------|-------------------|
 | USDT/BTC |  1609459200000 | 2021.01.01; 00:00 |  1617235140000 | 2021.03.31; 23:59 |
 
 ### Parameters

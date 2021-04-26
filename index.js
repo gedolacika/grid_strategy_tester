@@ -26,7 +26,7 @@ app.get('/', async (req, res) => {
     max: parseInt(req.query.max),
     numberOfGrids: parseInt(req.query.numberOfGrids),
     exchangeTradingVolumePerLine: parseFloat(req.query.exchangeTradingVolumePerLine),
-    exchangeFee: parseFloat(req.query.exchangeFee),
+    exchangeFee: req.query.exchangeFee != undefined ? parseFloat(req.query.exchangeFee) : 0.001,
     isTransactionsHaveToBeReturned: false,
     isLoggingEnabled: false
   }

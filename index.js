@@ -2,6 +2,8 @@ const express = require('express')
 const app = express()
 const port = 3000
 const grid_backtester = require('./grid_backtester/index').grid_backtester
+const SupportedCoinPairs = require('./utils/supported_coin_pairs.js')
+const gridSimulatorParameterValidator = require('./grid_backtester/parameter_checker.js').areParametersValid
 
 const gridSettingsForTesting = {
   fromTimestamp: 1609459200000,
@@ -30,6 +32,14 @@ app.get('/', async (req, res) => {
     isTransactionsHaveToBeReturned: false,
     isLoggingEnabled: false
   }
+
+  // check parameters and return error if something went wrong
+  var parameterError = gridSimulatorParameterValidator(gridSettingsFromQuery)
+  if(parameterError.areParametersCorrect == false) {
+    res.status(400).send(parameterError.error)
+    return;
+  }
+
   const running_starts = (new Date()).valueOf()
   var test_result = await grid_backtester(gridSettingsFromQuery)
   const running_finished = (new Date()).valueOf()
@@ -38,7 +48,13 @@ app.get('/', async (req, res) => {
     ...test_result,
     testerRunTime: running_finished - running_starts
   }
+  // console.log(test_result.transactions.length)
   res.send(JSON.stringify(test_result))
+})
+
+app.get('/supportedPairs', async (req, res) => {
+  
+  res.send(JSON.stringify((new SupportedCoinPairs()).getSupportedPairs()))
 })
 
 app.listen(port, () => {

@@ -7,14 +7,20 @@ const getTypeOfOrder = require('../utils/candle_counter_utils').getTypeOfOrder
 const precisionTransformer = require('../utils/currency_precision_transformer').transformer
 
 const grid_backtester = async (gridSettings) => {
+  // flag for logging if it required for development process
   const isLoggingEnabled = gridSettings.isLoggingEnabled
+
+  //create the object for future expansion and return at the end of the simulation
   var test_result = {
     settings: gridSettings
   }
-   // (numberOfGrids - 1) * oneTimeChange
+
+  // the initial required balance in the exchange and base currencies
+  // calculated based on the following equation: (numberOfGrids - 1) * oneTimeChange
   const initialExchangeValue = (gridSettings.numberOfGrids - 1) * gridSettings.exchangeTradingVolumePerLine
-   // (numberOfGrids - 1) * oneTimeChange
   const initialBaseValue = initialExchangeValue * gridSettings.max
+
+  // add the initial wallet details to the return object
   test_result = {
     ...test_result,
     initialBalance: {
@@ -22,12 +28,16 @@ const grid_backtester = async (gridSettings) => {
       exchange: initialExchangeValue
     }
   }
+
+  // read crypto rate changes from file
   const cryptoExchangeRateChanges = await cryptoReaderByDate(
     gridSettings.fromTimestamp,
     gridSettings.toTimestamp,
     gridSettings.baseCurrency,
     gridSettings.exchangeCurrency
   )
+
+  // create the balance provider and pass the initial balance to manage the virtual balance
   const balanceProvider = new BalanceProvider(
     initialBaseValue,
     initialExchangeValue,
@@ -35,7 +45,11 @@ const grid_backtester = async (gridSettings) => {
     gridSettings.exchangeCurrency,
     isLoggingEnabled
   );
+
+  // create the instance of the GridSignalProvider class to get signal for opening buy and sell orders 
   const gridSignalProvider = new GridSignalProvider(gridSettings.min, gridSettings.max, gridSettings.numberOfGrids);
+
+  // create the instance of the GridTransactionProvider to manage the transaction (create, fulfill, log)
   const gridTransationProvider = new GridTransactionProvider(
     gridSettings.min,
     gridSettings.max,
@@ -44,21 +58,32 @@ const grid_backtester = async (gridSettings) => {
   );
 
   isLoggingEnabled && balanceProvider.printBalance()
+
+  // variable for storing the fulfilled orders // in the future it should be renamed and moved to the GridTransactionProvider class
   var counter = 0
   
+  // adding the all transactions of the to show the users, how the simulation worked to check and understand it   
   var transactions = []
+
+  // run the simulation
   for (let i = 1; i < cryptoExchangeRateChanges.length; i++) {
+    // current  exchange rate (japanese candle)
     const element = cryptoExchangeRateChanges[i];
+
+    // previous exchange rate to check precisiously that the rate what direction crossed the grid line
     const previousElement = cryptoExchangeRateChanges[i - 1];
     const { timestamp, open, highest, lowest, close, volume } = element
 
+    // check that the current rate is crosses a grid line
     if (gridSignalProvider.isCrossedWithGridLine(element)) {
+      // crossed grid line and the upper and lower grid lines; if it is the highest or the lowest than each of previous or next is null
       const crossedGrid = gridSignalProvider.getCrossedGrid(element)
       const previousGrid = gridSignalProvider.getPreviousCrossedGrid(crossedGrid)
       const nextGrid = gridSignalProvider.getNextCrossedGrid(crossedGrid, i)
       
       // check that on the lower level is exists an active transaction to fulfill it
       if (gridTransationProvider.isTypedTransactionExists(previousGrid, 'buy', i)) {
+        // create transaction object for adding to the transaction list in the transaction field of the return object
         var transaction = {
           balanceBeforeTransaction: {
             base: balanceProvider.baseCurrency,
@@ -100,6 +125,8 @@ const grid_backtester = async (gridSettings) => {
           ), gridSettings.baseCurrency) + ' ' + gridSettings.baseCurrency
         }
         isLoggingEnabled && console.log('')
+
+        // change back the bought exchange value to base value; bought exchange on the lower grid line and now sell on the current(higher price)  
         balanceProvider.changeExchangeToBase(gridSettings.exchangeTradingVolumePerLine, crossedGrid)
         transaction = {
           ...transaction,
@@ -108,6 +135,8 @@ const grid_backtester = async (gridSettings) => {
             exchange: balanceProvider.exchange
           }
         }
+
+        // clear the transaction from the active transactions list
         gridTransationProvider.fulfillTransaction(previousGrid)
         isLoggingEnabled && balanceProvider.printBalance('FULFILL, BUY - iteration: ' + i + ', time: ' + (new Date(timestamp).toUTCString()) + ', onGrid: ' + crossedGrid + ', prevGrid: ' + previousGrid + ' -')
         if(i < 250) { gridTransationProvider.printActiveTransactions() }
@@ -118,6 +147,7 @@ const grid_backtester = async (gridSettings) => {
 
       // check that on the higher level is exists an active transaction to fulfill it
       if (gridTransationProvider.isTypedTransactionExists(nextGrid, 'sell', i)) {
+        // create transaction object for adding to the transaction list in the transaction field of the return object
         var transaction = {
           balanceBeforeTransaction: {
             base: balanceProvider.baseCurrency,
@@ -158,6 +188,8 @@ const grid_backtester = async (gridSettings) => {
           )
           ), gridSettings.baseCurrency) + ' ' + gridSettings.baseCurrency
         }
+
+        // buy back the sold exchange value from base value; sold exchange on the higher grid line and now buy back on the current(lower price)  
         balanceProvider.changeBaseToExchange(crossedGrid * gridSettings.exchangeTradingVolumePerLine, crossedGrid)
         transaction = {
           ...transaction,
@@ -166,6 +198,8 @@ const grid_backtester = async (gridSettings) => {
             exchange: balanceProvider.exchange
           }
         }
+
+        // clear the transaction from the active transactions list
         gridTransationProvider.fulfillTransaction(nextGrid)
         isLoggingEnabled && balanceProvider.printBalance('FULFILL, SELL - iteration: ' + i + ', time: ' + (new Date(timestamp).toUTCString()) + ', onGrid: ' + crossedGrid + ', nextGrid: ' + nextGrid + ' -')
         if(isLoggingEnabled && i < 250) { gridTransationProvider.printActiveTransactions() }
@@ -174,9 +208,11 @@ const grid_backtester = async (gridSettings) => {
       }
 
       // check that at the current level is exists already a transaction
-      // if not have to create one
+      // if not have than create one
       if (!gridTransationProvider.isTransactionExists(gridSignalProvider.getCrossedGrid(element))) {
+        // check that the price rate from what direction crossed the grid line (if up to down than it will be sell and inverse buy) 
         const transactionType = getTypeOfOrder(element, previousElement, crossedGrid ,gridSignalProvider.gridLines);
+        // create transaction object for adding to the transaction list in the transaction field of the return object
         var transaction = {
           balanceBeforeTransaction: {
             base: balanceProvider.baseCurrency,
@@ -190,6 +226,8 @@ const grid_backtester = async (gridSettings) => {
         }
         var isSuccessedTransaction = false
         isLoggingEnabled && console.log('------ CREATE  ORDER -----')
+        
+        // buy or sell exchange or base currency based on crossing direction
         if (transactionType == 'buy') {
           isSuccessedTransaction = balanceProvider.changeBaseToExchange(crossedGrid * gridSettings.exchangeTradingVolumePerLine, crossedGrid);
         }
@@ -203,6 +241,8 @@ const grid_backtester = async (gridSettings) => {
             exchange: balanceProvider.exchange
           }
         }
+
+        // if the wallet is enough than the transaction will be succeeded and than have to put the order into the active transactions list
         if (isSuccessedTransaction) {
           isLoggingEnabled && balanceProvider.printBalance(i + ' - ' + (new Date(timestamp).toUTCString()) + ' - ' + open.toString() + ' - ' + transactionType.toUpperCase() + ' - crossed grid:' + crossedGrid)
           gridTransationProvider.createTransaction(gridSettings.exchangeTradingVolumePerLine, crossedGrid, transactionType, i)
@@ -225,6 +265,7 @@ const grid_backtester = async (gridSettings) => {
 
   const lastCloseRate = cryptoExchangeRateChanges[cryptoExchangeRateChanges.length - 1].close
 
+  // finish the result object
   test_result = {
     ...test_result,
     endBalance: {
@@ -279,6 +320,7 @@ const grid_backtester = async (gridSettings) => {
   isLoggingEnabled && console.log('Results: ')
   // console.log(test_result)
 
+  // return the result back to the caller function
   return test_result
 }
 

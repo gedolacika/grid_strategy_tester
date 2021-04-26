@@ -10,7 +10,7 @@ class GridSignalProvider {
         this.#createGridLines()
         isLoggingEnabled && this.gridLines.reverse().forEach(element => console.log(element))
     }
-
+    
     #createGridLines() {
         for (let i = 0; i < this.numberOfGrids; i++) {
             this.gridLines.push(this.minValue + (i * this.gridHeight));
@@ -27,7 +27,7 @@ class GridSignalProvider {
         });
         return isCrossed;
     }
-
+ 
     getCrossedGrid(currentValue) {
         const { highest, lowest } = currentValue;
         var crossedGrid

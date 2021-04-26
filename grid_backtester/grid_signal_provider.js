@@ -27,7 +27,7 @@ class GridSignalProvider {
         });
         return isCrossed;
     }
-
+ 
     getCrossedGrid(currentValue) {
         const { highest, lowest } = currentValue;
         var crossedGrid
